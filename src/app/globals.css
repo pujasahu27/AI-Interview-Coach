@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+:root {
+  --background: #060608;
+  --surface: #0c0c10;
+  --surface-elevated: #101018;
+  --line: #1a1a26;
+  --line2: #252538;
+  --muted: #3a3a52;
+  --sub: #8080a0;
+  --body: #b0b0c8;
+  --foreground: #e8e8f0;
+  --white: #f4f2ee;
+
+  --gold: #f0b429;
+  --gold2: #e09820;
+  --gold-glow: rgba(240, 180, 41, 0.18);
+  --gold-faint: rgba(240, 180, 41, 0.07);
+  --coral: #e8614a;
+  --violet: #7c6ef5;
+  --green: #3ecf8e;
+  --on-accent: #0a0800;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-muted: var(--muted);
+  --color-sub: var(--sub);
+  --color-body: var(--body);
+  --color-foreground: var(--foreground);
+  --color-white: var(--white);
+  --color-gold: var(--gold);
+  --color-gold2: var(--gold2);
+  --color-coral: var(--coral);
+  --color-violet: var(--violet);
+  --color-green: var(--green);
+  --color-on-accent: var(--on-accent);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@keyframes orb-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 14px rgba(240, 180, 41, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(240, 180, 41, 0.65);
+  }
+}
+@keyframes orb-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+@keyframes ring-pulse {
+  0% {
+    transform: scale(0.88);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+@keyframes wave-bar {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 24px rgba(232, 97, 74, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(232, 97, 74, 0.75);
+  }
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.animate-orb-pulse {
+  animation: orb-pulse 3s ease-in-out infinite;
+}
+.animate-orb-float {
+  animation: orb-float 6s ease-in-out infinite;
+}
+.animate-wave-bar {
+  animation: wave-bar 1.3s ease-in-out infinite;
+}
+.animate-mic-pulse {
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+.animate-blink {
+  animation: blink 1.4s ease-in-out infinite;
+}
+.animate-fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-fade-in {
+  animation: fade-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-breathe {
+  animation: breathe 2.6s ease-in-out infinite;
+}
+
+.ring-pulse::before,
+.ring-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 180, 41, 0.2);
+  animation: ring-pulse 2.5s ease-out infinite;
+}
+.ring-pulse::after {
+  inset: -42px;
+  border-color: rgba(240, 180, 41, 0.1);
+  animation-delay: 0.6s;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}

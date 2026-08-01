@@ -9,7 +9,6 @@ import {
   auth,
   establishServerSession,
   getGoogleRedirectResult,
-  isMobileBrowser,
   signInWithEmail,
   signInWithGooglePopup,
   signInWithGoogleRedirect,
@@ -122,21 +121,35 @@ export function LoginForm() {
     setError(null);
     setPending(true);
     try {
-      if (isMobileBrowser()) {
-        // Popups are unreliable on mobile browsers (blocked, or lose their
-        // connection back to this page) — redirect instead. The page
-        // navigates away; the result is picked up by the effect above
-        // once Google sends the browser back here.
-        setGoogleRedirecting(true);
-        await signInWithGoogleRedirect();
-        return;
-      }
       const credential = await signInWithGooglePopup();
       await establishServerSession(credential.user);
       router.push("/dashboard");
     } catch (err) {
+      // Popup can genuinely fail to open in some mobile browser contexts
+      // (blocked, or the environment doesn't support window.open at all).
+      // Fall back to a full-page redirect in that case — its result is
+      // picked up by the effect above once Google sends the browser back.
+      const shouldFallBackToRedirect =
+        err instanceof FirebaseError &&
+        (err.code === "auth/popup-blocked" ||
+          err.code === "auth/operation-not-supported-in-this-environment" ||
+          err.code === "auth/cancelled-popup-request");
+
+      if (shouldFallBackToRedirect) {
+        try {
+          setGoogleRedirecting(true);
+          await signInWithGoogleRedirect();
+          return;
+        } catch (redirectErr) {
+          console.error("Google redirect fallback failed:", redirectErr);
+          setGoogleRedirecting(false);
+          setError(friendlyError(redirectErr));
+          setPending(false);
+          return;
+        }
+      }
+
       console.error("Google sign-in failed:", err);
-      setGoogleRedirecting(false);
       setError(friendlyError(err));
     } finally {
       setPending(false);

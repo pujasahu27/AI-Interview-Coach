@@ -2,12 +2,15 @@
 
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import {
   establishServerSession,
+  getGoogleRedirectResult,
+  isMobileBrowser,
   signInWithEmail,
   signInWithGooglePopup,
+  signInWithGoogleRedirect,
   signUpWithEmail,
 } from "@/lib/firebase-client";
 
@@ -40,6 +43,27 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  useEffect(() => {
+    // Picks up the result when the page reloads after a mobile Google
+    // sign-in redirect. Resolves to null on a normal page load.
+    let cancelled = false;
+    (async () => {
+      try {
+        const credential = await getGoogleRedirectResult();
+        if (credential && !cancelled) {
+          setPending(true);
+          await establishServerSession(credential.user);
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        if (!cancelled) setError(friendlyError(err));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
@@ -66,6 +90,14 @@ export function LoginForm() {
     setError(null);
     setPending(true);
     try {
+      if (isMobileBrowser()) {
+        // Popups are unreliable on mobile browsers (blocked, or lose their
+        // connection back to this page) — redirect instead. The page
+        // navigates away; the result is picked up by the effect above
+        // once Google sends the browser back here.
+        await signInWithGoogleRedirect();
+        return;
+      }
       const credential = await signInWithGooglePopup();
       await establishServerSession(credential.user);
       router.push("/dashboard");

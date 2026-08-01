@@ -3,8 +3,10 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   getAuth,
+  getRedirectResult,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   type User,
   type UserCredential,
@@ -45,6 +47,23 @@ export function signInWithEmail(
 
 export function signInWithGooglePopup(): Promise<UserCredential> {
   return signInWithPopup(auth, googleProvider);
+}
+
+// signInWithPopup is unreliable on mobile browsers (popups get blocked, or
+// lose their connection back to the opener page) -- Firebase recommends the
+// redirect flow there instead. The page navigates away and back; the result
+// is picked up via getGoogleRedirectResult() on the next mount.
+export function isMobileBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+export function signInWithGoogleRedirect(): Promise<void> {
+  return signInWithRedirect(auth, googleProvider);
+}
+
+export function getGoogleRedirectResult(): Promise<UserCredential | null> {
+  return getRedirectResult(auth);
 }
 
 export function signOutClient(): Promise<void> {

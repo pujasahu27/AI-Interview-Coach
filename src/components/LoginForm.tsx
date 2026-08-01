@@ -1,10 +1,12 @@
 "use client";
 
 import { FirebaseError } from "firebase/app";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import {
+  auth,
   establishServerSession,
   getGoogleRedirectResult,
   isMobileBrowser,
@@ -54,21 +56,43 @@ export function LoginForm() {
     // Picks up the result when the page reloads after a mobile Google
     // sign-in redirect. Resolves to null on a normal page load.
     let cancelled = false;
+    let handled = false;
+
+    async function completeSignIn(user: User) {
+      if (handled || cancelled) return;
+      handled = true;
+      try {
+        setPending(true);
+        await establishServerSession(user);
+        router.push("/dashboard");
+      } catch (err) {
+        console.error("establishServerSession after Google redirect failed:", err);
+        if (!cancelled) setError(friendlyError(err));
+      }
+    }
+
     (async () => {
       try {
         const credential = await getGoogleRedirectResult();
-        if (credential && !cancelled) {
-          setPending(true);
-          await establishServerSession(credential.user);
-          router.push("/dashboard");
-        }
+        if (credential) await completeSignIn(credential.user);
       } catch (err) {
         console.error("getGoogleRedirectResult failed:", err);
         if (!cancelled) setError(friendlyError(err));
       }
     })();
+
+    // Fallback: on some mobile browsers (notably Safari, with storage
+    // partitioning), Firebase can complete a redirect sign-in internally
+    // without getRedirectResult() ever returning the credential. The auth
+    // state listener still reliably fires once Firebase resolves it, so
+    // catch it here too.
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) void completeSignIn(user);
+    });
+
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [router]);
 

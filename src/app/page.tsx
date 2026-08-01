@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
+import { HeroOrbDemo } from "@/components/HeroOrbDemo";
+import { MarketingFooter } from "@/components/MarketingFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { LinkButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CircularScore } from "@/components/ui/CircularScore";
 import { Orb } from "@/components/ui/Orb";
 import { Reveal } from "@/components/ui/Reveal";
+import { ScoreBar } from "@/components/ui/ScoreBar";
+import { Tag } from "@/components/ui/Tag";
 import { getCurrentUser } from "@/lib/session";
 
 const HOW_STEPS = [
@@ -49,20 +55,7 @@ export default async function Home() {
 
   return (
     <div>
-      <nav className="fixed inset-x-0 top-0 z-50 flex h-[68px] items-center justify-between border-b border-line bg-background/70 px-6 backdrop-blur-md sm:px-12">
-        <div className="flex items-center gap-2.5 text-[17px] font-semibold text-white">
-          <Orb size={26} />
-          AI Interview Coach
-        </div>
-        <div className="flex items-center gap-3">
-          <LinkButton href="/login" variant="ghost" size="sm">
-            Log in
-          </LinkButton>
-          <LinkButton href="/login" variant="gold" size="sm">
-            Start free
-          </LinkButton>
-        </div>
-      </nav>
+      <MarketingNav />
 
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pb-20 pt-36 text-center">
         <div
@@ -91,24 +84,60 @@ export default async function Home() {
           {"// free to start"} &middot; runs in your browser
         </p>
 
-        <div className="animate-fade-up mt-24 flex flex-col items-center gap-5" style={{ animationDelay: "380ms" }}>
-          <div className="flex items-center gap-2.5 rounded-full border border-line2 bg-surface-elevated px-5 py-3 text-sm text-body">
-            <span className="flex h-[18px] items-center gap-[3px]">
-              {[5, 14, 9, 18, 11, 7, 15].map((h, i) => (
-                <span
-                  key={i}
-                  className="animate-wave-bar w-[2.5px] rounded-full bg-gold"
-                  style={{ height: h, animationDelay: `${-1.05 + i * 0.15}s` }}
-                />
-              ))}
-            </span>
-            Listening&hellip;
-          </div>
-          <Orb size={200} withRings />
-          <p className="font-mono text-[11px] uppercase tracking-[.12em] text-muted">
-            Your AI Interviewer
-          </p>
+        <div className="animate-fade-up mt-24" style={{ animationDelay: "380ms" }}>
+          <HeroOrbDemo />
         </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-surface px-6 py-32">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(900px circle at 50% 0%, rgba(240,180,41,.08) 0%, transparent 60%)" }}
+        />
+        <Reveal className="relative z-10 mx-auto mb-16 max-w-xl text-center">
+          <span className="mb-6 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[.14em] text-sub before:h-px before:w-5 before:bg-muted before:content-[''] after:h-px after:w-5 after:bg-muted after:content-['']">
+            Real feedback
+          </span>
+          <h2 className="font-serif text-[clamp(36px,6vw,60px)] font-normal leading-none tracking-tight text-white">
+            You talked. <em className="text-gold italic">Our AI</em> listened.
+          </h2>
+          <p className="mx-auto mt-5 max-w-md text-lg leading-relaxed text-body">
+            Every answer gets scored on the spot — what worked, what didn&apos;t, and why.
+          </p>
+        </Reveal>
+
+        <Reveal className="relative z-10 mx-auto max-w-md">
+          <span className="absolute -left-4 top-6 hidden -translate-x-full whitespace-nowrap rounded-full border border-line2 bg-surface-elevated px-3.5 py-1.5 font-mono text-[11px] text-sub shadow-[0_12px_24px_-12px_rgba(0,0,0,.7)] lg:block">
+            Instant analysis
+          </span>
+          <span className="absolute -right-4 top-[38%] hidden translate-x-full whitespace-nowrap rounded-full border border-line2 bg-surface-elevated px-3.5 py-1.5 font-mono text-[11px] text-sub shadow-[0_12px_24px_-12px_rgba(0,0,0,.7)] lg:block">
+            AI-powered questions
+          </span>
+          <span className="absolute -left-6 bottom-8 hidden -translate-x-full whitespace-nowrap rounded-full border border-gold/25 bg-gold-faint px-3.5 py-1.5 font-mono text-[11px] text-gold shadow-[0_12px_24px_-12px_rgba(0,0,0,.7)] lg:block">
+            Resume-specific
+          </span>
+
+          <div className="rounded-[24px] border border-line2 bg-background p-7 shadow-[inset_0_1px_0_rgba(255,255,255,.04),0_30px_60px_-30px_rgba(0,0,0,.85)]">
+            <div className="mb-6 flex items-center justify-between">
+              <p className="font-mono text-[11px] uppercase tracking-[.12em] text-muted">
+                Analysis by AI
+              </p>
+              <Tag tone="gold">Job specific</Tag>
+            </div>
+            <div className="mb-5 flex items-center gap-6">
+              <CircularScore value={8} size={84} />
+              <div>
+                <p className="font-serif text-2xl font-normal text-white">Strong answer</p>
+                <p className="text-sm text-sub">Grounded in real examples, clear structure.</p>
+              </div>
+            </div>
+            <div>
+              <ScoreBar label="Content relevance" value={9} />
+              <ScoreBar label="Communication" value={7} />
+              <ScoreBar label="Confidence" value={8} />
+            </div>
+          </div>
+        </Reveal>
       </section>
 
       <section className="mx-auto max-w-5xl px-6 py-32">
@@ -186,11 +215,7 @@ export default async function Home() {
         </Reveal>
       </section>
 
-      <footer className="border-t border-line px-6 py-10 text-center">
-        <p className="font-mono text-xs text-muted">
-          &copy; {new Date().getFullYear()} AI Interview Coach &middot; Interview like never before.
-        </p>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

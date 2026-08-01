@@ -15,7 +15,7 @@ function getSpeechRecognitionCtor() {
 }
 
 export function VoiceRecorder({ value, onChange, disabled }: Props) {
-  const [supported] = useState(() => Boolean(getSpeechRecognitionCtor()));
+  const [supported, setSupported] = useState(false);
   const [recording, setRecording] = useState(false);
   const [interim, setInterim] = useState("");
   const recognitionRef = useRef<InstanceType<NonNullable<typeof window.SpeechRecognition>> | null>(
@@ -25,6 +25,12 @@ export function VoiceRecorder({ value, onChange, disabled }: Props) {
 
   useEffect(() => {
     const SpeechRecognitionCtor = getSpeechRecognitionCtor();
+    // getSpeechRecognitionCtor() only resolves truthy client-side; syncing it
+    // into state here (instead of a lazy useState initializer) keeps the
+    // first client render matching the server-rendered HTML and avoids a
+    // hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSupported(Boolean(SpeechRecognitionCtor));
     if (!SpeechRecognitionCtor) return;
 
     const recognition = new SpeechRecognitionCtor();

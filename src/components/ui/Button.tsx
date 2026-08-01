@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from "react";
 
 type Variant = "gold" | "dark" | "ghost" | "outline-gold";
 
@@ -29,7 +29,7 @@ function classes({
   fullWidth,
 }: Pick<BaseProps, "variant" | "size" | "fullWidth">) {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none active:scale-[.97]",
+    "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none active:scale-[.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     VARIANT_CLASSES[variant],
     SIZE_CLASSES[size],
     fullWidth ? "w-full" : "",
@@ -56,6 +56,7 @@ export function Button({
 type LinkButtonProps = BaseProps & {
   href: string;
   className?: string;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
 export function LinkButton({
@@ -65,9 +66,14 @@ export function LinkButton({
   fullWidth,
   className,
   children,
+  onClick,
 }: LinkButtonProps) {
   return (
-    <Link href={href} className={`${classes({ variant, size, fullWidth })} ${className ?? ""}`}>
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`${classes({ variant, size, fullWidth })} ${className ?? ""}`}
+    >
       {children}
     </Link>
   );

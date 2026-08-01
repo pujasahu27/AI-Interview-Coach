@@ -39,8 +39,14 @@ export async function POST(request: Request) {
       email: decoded.email ?? null,
       displayName: null,
       targetRole: null,
-      defaultYearsOfExperience: null,
-      defaultInterviewFocus: null,
+      targetCompany: "",
+      // Sensible defaults for a first interview — the onboarding flow only
+      // collects name + target role; these stay editable per-session in the
+      // interview setup step, or as persistent defaults from the Profile page.
+      defaultExperienceBucket: "1-3",
+      defaultYearsOfExperience: 2,
+      defaultInterviewFocus: "mixed",
+      defaultDifficulty: "intermediate",
       onboardingStatus: "pending",
       freeTurnsUsed: 0,
       freeTurnsLimit: 7,

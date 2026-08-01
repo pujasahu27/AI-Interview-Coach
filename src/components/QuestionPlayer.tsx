@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Orb } from "@/components/ui/Orb";
+import { speakText } from "@/lib/speech";
 
 const WAVE_HEIGHTS = [5, 14, 9, 18, 11, 7, 15];
 
@@ -12,37 +13,41 @@ export function QuestionPlayer({
   text: string;
   onSpeechEnd?: () => void;
 }) {
-  const [supported] = useState(
-    () => typeof window !== "undefined" && Boolean(window.speechSynthesis),
-  );
+  const [supported, setSupported] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const lastSpokenRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // window.speechSynthesis only exists client-side; syncing it into state
+    // here (instead of a lazy useState initializer) keeps the first client
+    // render matching the server-rendered HTML and avoids a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSupported(Boolean(window.speechSynthesis));
+  }, []);
+
+  useEffect(() => {
     if (lastSpokenRef.current === text) return;
     lastSpokenRef.current = text;
-    if (!supported) {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
       onSpeechEnd?.();
       return;
     }
     speak(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, supported]);
+  }, [text]);
 
   function speak(isInitial: boolean) {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => {
-      setSpeaking(false);
-      if (isInitial) onSpeechEnd?.();
-    };
-    utterance.onerror = () => {
-      setSpeaking(false);
-      if (isInitial) onSpeechEnd?.();
-    };
-    window.speechSynthesis.speak(utterance);
+    void speakText(text, {
+      onStart: () => setSpeaking(true),
+      onEnd: () => {
+        setSpeaking(false);
+        if (isInitial) onSpeechEnd?.();
+      },
+      onError: () => {
+        setSpeaking(false);
+        if (isInitial) onSpeechEnd?.();
+      },
+    });
   }
 
   return (

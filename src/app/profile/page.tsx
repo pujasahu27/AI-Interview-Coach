@@ -13,7 +13,7 @@ export default async function ProfilePage() {
   const credits = await getCreditStatus(user.uid);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background md:flex-row">
       <Sidebar
         active="profile"
         userLabel={userData?.displayName || "You"}

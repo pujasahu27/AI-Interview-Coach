@@ -21,9 +21,30 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
+const title = "AI Interview Coach";
+const description =
+  "An AI interviewer that talks with you like a real one — adapting every question to your resume and answers, then tells you precisely how to improve.";
+
 export const metadata: Metadata = {
-  title: "AI Interview Coach",
-  description: "Adaptive voice-based mock interviews.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://ai-interview-coach-jrw4.vercel.app",
+  ),
+  title: {
+    default: title,
+    template: `%s · ${title}`,
+  },
+  description,
+  openGraph: {
+    title,
+    description,
+    type: "website",
+    siteName: title,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({

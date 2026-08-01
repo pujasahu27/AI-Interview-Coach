@@ -13,9 +13,9 @@ export default async function PaywallPage() {
   const canInterview = hasCreditsRemaining(credits);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background md:flex-row">
       <Sidebar
-        active="dashboard"
+        active="paywall"
         userLabel={userData?.displayName || "You"}
         userPlan={
           credits.unlimited ? "Unlimited plan" : canInterview ? "Free plan" : "Free plan (exhausted)"

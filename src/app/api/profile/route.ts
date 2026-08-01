@@ -35,32 +35,42 @@ export async function PATCH(request: Request) {
     defaultDifficulty,
   } = body;
 
+  // displayName + targetRole are the only fields onboarding actually collects.
+  // The rest are optional here so the Profile page (which sends all of them)
+  // and onboarding (which doesn't) can share this same endpoint.
   if (
     typeof displayName !== "string" ||
     !displayName.trim() ||
     typeof targetRole !== "string" ||
     !targetRole.trim() ||
     (targetCompany !== undefined && typeof targetCompany !== "string") ||
-    !isExperienceBucket(defaultExperienceBucket) ||
-    !isInterviewFocus(defaultInterviewFocus) ||
-    !isDifficulty(defaultDifficulty)
+    (defaultExperienceBucket !== undefined && !isExperienceBucket(defaultExperienceBucket)) ||
+    (defaultInterviewFocus !== undefined && !isInterviewFocus(defaultInterviewFocus)) ||
+    (defaultDifficulty !== undefined && !isDifficulty(defaultDifficulty))
   ) {
     return NextResponse.json({ error: "missing or invalid fields" }, { status: 400 });
   }
 
-  await userRef.set(
-    {
-      displayName: displayName.trim(),
-      targetRole: targetRole.trim(),
-      targetCompany: typeof targetCompany === "string" ? targetCompany.trim() : "",
-      defaultExperienceBucket,
-      defaultYearsOfExperience: bucketToYears(defaultExperienceBucket),
-      defaultInterviewFocus,
-      defaultDifficulty,
-      onboardingStatus: "completed",
-    },
-    { merge: true },
-  );
+  const updates: Record<string, unknown> = {
+    displayName: displayName.trim(),
+    targetRole: targetRole.trim(),
+    onboardingStatus: "completed",
+  };
+  if (typeof targetCompany === "string") {
+    updates.targetCompany = targetCompany.trim();
+  }
+  if (isExperienceBucket(defaultExperienceBucket)) {
+    updates.defaultExperienceBucket = defaultExperienceBucket;
+    updates.defaultYearsOfExperience = bucketToYears(defaultExperienceBucket);
+  }
+  if (isInterviewFocus(defaultInterviewFocus)) {
+    updates.defaultInterviewFocus = defaultInterviewFocus;
+  }
+  if (isDifficulty(defaultDifficulty)) {
+    updates.defaultDifficulty = defaultDifficulty;
+  }
+
+  await userRef.set(updates, { merge: true });
 
   return NextResponse.json({ success: true });
 }

@@ -31,7 +31,7 @@ export default async function HistoryPage() {
     );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background md:flex-row">
       <Sidebar
         active="history"
         userLabel={userSnap.data()?.displayName || "You"}

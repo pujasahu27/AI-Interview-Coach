@@ -347,7 +347,7 @@ export function InterviewWizard({ profileDefaults, lastResume }: Props) {
 
           <div className="space-y-1.5">
             <span className="text-sm font-medium text-sub">Years of experience</span>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {EXPERIENCE_BUCKETS.map((bucket) => (
                 <button
                   key={bucket.value}
@@ -367,7 +367,7 @@ export function InterviewWizard({ profileDefaults, lastResume }: Props) {
 
           <div className="space-y-1.5">
             <span className="text-sm font-medium text-sub">Interview type</span>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {INTERVIEW_FOCUS_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -387,7 +387,7 @@ export function InterviewWizard({ profileDefaults, lastResume }: Props) {
 
           <div className="space-y-1.5">
             <span className="text-sm font-medium text-sub">Difficulty</span>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {DIFFICULTY_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}

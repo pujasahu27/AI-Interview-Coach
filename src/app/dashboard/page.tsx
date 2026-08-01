@@ -46,11 +46,14 @@ const ICONS = {
 };
 
 const KPI_ACCENTS = {
-  gold: "bg-gold-faint text-gold",
-  violet: "bg-violet/10 text-violet",
-  green: "bg-green/10 text-green",
-  coral: "bg-coral/10 text-coral",
+  gold: "bg-gold/15 text-gold",
+  violet: "bg-violet/15 text-violet",
+  green: "bg-green/15 text-green",
+  coral: "bg-coral/15 text-coral",
 };
+
+const CARD_SHADOW =
+  "shadow-[inset_0_1px_0_rgba(255,255,255,.04),0_20px_40px_-28px_rgba(0,0,0,.85)]";
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -102,14 +105,19 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background md:flex-row">
       <Sidebar
         active="dashboard"
         userLabel={userData?.displayName || "You"}
         userPlan={credits.unlimited ? "Unlimited plan" : canInterview ? "Free plan" : "Free plan (exhausted)"}
       />
-      <div className="flex-1 px-8 py-9">
-        <div className="mb-8 flex items-center gap-4">
+      <div className="relative flex-1 overflow-hidden px-8 py-9">
+        <div
+          className="pointer-events-none absolute -top-32 left-1/2 h-[380px] w-[760px] -translate-x-1/2"
+          style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(240,180,41,.07) 0%, transparent 70%)" }}
+        />
+
+        <div className="relative mb-8 flex items-center gap-4">
           <Orb size={48} />
           <div>
             <h1 className="font-serif text-[34px] font-normal leading-tight tracking-tight text-white">
@@ -125,19 +133,21 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="relative mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {kpis.map((kpi, i) => (
             <Reveal key={kpi.label} delay={i * 60}>
-              <div className="rounded-[18px] border border-line2 bg-surface p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gold/25">
-                <div className="mb-4 flex items-center justify-between">
+              <div
+                className={`rounded-[18px] border border-line2 bg-surface-elevated p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gold/25 ${CARD_SHADOW}`}
+              >
+                <div className="flex items-center justify-between">
                   <p className="font-mono text-[11px] uppercase tracking-[.06em] text-muted">
                     {kpi.label}
                   </p>
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${kpi.accent}`}>
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${kpi.accent}`}>
                     {kpi.icon}
                   </span>
                 </div>
-                <p className="flex items-baseline gap-1 font-serif text-4xl font-normal tracking-tight text-white">
+                <p className="mt-2.5 flex items-baseline gap-1 font-serif text-4xl font-normal tracking-tight text-white">
                   {kpi.display ?? <Counter value={kpi.value} />}
                   {kpi.suffix && <span className="font-sans text-base font-normal text-muted">{kpi.suffix}</span>}
                 </p>
@@ -147,10 +157,12 @@ export default async function DashboardPage() {
         </div>
 
         <Reveal delay={120}>
-          <div className="relative mb-6 overflow-hidden rounded-[20px] border border-gold/20 bg-gold-faint p-7">
+          <div
+            className={`relative mb-6 overflow-hidden rounded-[20px] border border-gold/20 bg-gold-faint p-7 ${CARD_SHADOW}`}
+          >
             <div
               className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full"
-              style={{ background: "radial-gradient(circle, rgba(240,180,41,.16) 0%, transparent 70%)" }}
+              style={{ background: "radial-gradient(circle, rgba(240,180,41,.18) 0%, transparent 70%)" }}
             />
             <div className="relative flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -171,7 +183,7 @@ export default async function DashboardPage() {
         </Reveal>
 
         <Reveal delay={180}>
-          <div className="rounded-[18px] border border-line2 bg-surface p-[22px]">
+          <div className={`relative rounded-[18px] border border-line2 bg-surface-elevated p-[22px] ${CARD_SHADOW}`}>
             <div className="mb-2 flex items-center justify-between">
               <h3 className="text-[15px] font-semibold text-foreground">Recent interviews</h3>
               <Link href="/history" className="text-[13px] text-gold hover:underline">
@@ -179,9 +191,17 @@ export default async function DashboardPage() {
               </Link>
             </div>
             {sessions.length === 0 ? (
-              <div className="flex flex-col items-center gap-4 py-10 text-center">
+              <div className="flex flex-col items-center gap-4 py-9 text-center">
                 <Orb size={44} />
-                <p className="text-sm text-sub">No interviews yet — start your first one above.</p>
+                <div>
+                  <p className="text-sm text-sub">No interviews yet.</p>
+                  <p className="text-sm text-sub">Upload a resume to start your first one.</p>
+                </div>
+                {canInterview && (
+                  <LinkButton href="/dashboard/new" variant="dark" size="sm">
+                    Start your first interview
+                  </LinkButton>
+                )}
               </div>
             ) : (
               <div className="divide-y divide-line">
@@ -189,9 +209,9 @@ export default async function DashboardPage() {
                   <Link
                     key={s.id}
                     href={s.status === "completed" ? `/interview/${s.id}/summary` : `/interview/${s.id}`}
-                    className="group flex items-center gap-4 rounded-[14px] px-2 py-3.5 transition-colors hover:bg-surface-elevated"
+                    className="group flex items-center gap-4 rounded-[14px] px-2 py-3.5 transition-colors hover:bg-white/[.03]"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-elevated text-sub transition-colors group-hover:text-gold">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line2 bg-surface text-sub transition-colors group-hover:border-gold/30 group-hover:text-gold">
                       {ICONS.mic}
                     </div>
                     <div className="min-w-0 flex-1">

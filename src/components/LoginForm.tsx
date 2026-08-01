@@ -27,8 +27,14 @@ function friendlyError(error: unknown): string {
         return "Password should be at least 6 characters.";
       case "auth/popup-closed-by-user":
         return "Sign-in popup was closed before completing.";
+      case "auth/unauthorized-domain":
+        return "This site isn't yet authorized for Google sign-in (unauthorized domain).";
+      case "auth/operation-not-supported-in-this-environment":
+        return "Google sign-in isn't supported in this browser/app. Try opening the site in Chrome or Safari directly.";
+      case "auth/network-request-failed":
+        return "Network error — check your connection and try again.";
       default:
-        return "Something went wrong. Please try again.";
+        return `Something went wrong (${error.code}). Please try again.`;
     }
   }
   return "Something went wrong. Please try again.";
@@ -42,6 +48,7 @@ export function LoginForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [googleRedirecting, setGoogleRedirecting] = useState(false);
 
   useEffect(() => {
     // Picks up the result when the page reloads after a mobile Google
@@ -56,6 +63,7 @@ export function LoginForm() {
           router.push("/dashboard");
         }
       } catch (err) {
+        console.error("getGoogleRedirectResult failed:", err);
         if (!cancelled) setError(friendlyError(err));
       }
     })();
@@ -95,6 +103,7 @@ export function LoginForm() {
         // connection back to this page) — redirect instead. The page
         // navigates away; the result is picked up by the effect above
         // once Google sends the browser back here.
+        setGoogleRedirecting(true);
         await signInWithGoogleRedirect();
         return;
       }
@@ -102,6 +111,8 @@ export function LoginForm() {
       await establishServerSession(credential.user);
       router.push("/dashboard");
     } catch (err) {
+      console.error("Google sign-in failed:", err);
+      setGoogleRedirecting(false);
       setError(friendlyError(err));
     } finally {
       setPending(false);
@@ -121,27 +132,36 @@ export function LoginForm() {
         </p>
       </div>
 
-      <Button variant="dark" fullWidth disabled={pending} onClick={handleGoogleSignIn}>
-        <svg width="16" height="16" viewBox="0 0 24 24">
-          <path
-            fill="#4285F4"
-            d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.89c2.27-2.09 3.58-5.17 3.58-8.82Z"
-          />
-          <path
-            fill="#34A853"
-            d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3c-1.08.73-2.46 1.15-4.06 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.09A12 12 0 0 0 12 24Z"
-          />
-          <path
-            fill="#FBBC05"
-            d="M5.27 14.28a7.2 7.2 0 0 1 0-4.56V6.63H1.26a12 12 0 0 0 0 10.74l4.01-3.09Z"
-          />
-          <path
-            fill="#EA4335"
-            d="M12 4.75c1.76 0 3.34.6 4.59 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.26 6.63l4.01 3.09C6.22 6.86 8.87 4.75 12 4.75Z"
-          />
-        </svg>
-        Continue with Google
+      <Button
+        variant="dark"
+        fullWidth
+        disabled={pending || googleRedirecting}
+        onClick={handleGoogleSignIn}
+      >
+        {!googleRedirecting && (
+          <svg width="16" height="16" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.89c2.27-2.09 3.58-5.17 3.58-8.82Z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3c-1.08.73-2.46 1.15-4.06 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.09A12 12 0 0 0 12 24Z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.27 14.28a7.2 7.2 0 0 1 0-4.56V6.63H1.26a12 12 0 0 0 0 10.74l4.01-3.09Z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 4.75c1.76 0 3.34.6 4.59 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.26 6.63l4.01 3.09C6.22 6.86 8.87 4.75 12 4.75Z"
+            />
+          </svg>
+        )}
+        {googleRedirecting ? "Redirecting to Google…" : "Continue with Google"}
       </Button>
+
+      {error && <p className="text-center text-sm text-coral">{error}</p>}
 
       <div className="flex items-center gap-3 text-xs text-muted">
         <div className="h-px flex-1 bg-line" />
@@ -193,7 +213,6 @@ export function LoginForm() {
             />
           </div>
         )}
-        {error && <p className="text-sm text-coral">{error}</p>}
         <Button type="submit" variant="gold" fullWidth disabled={pending}>
           {mode === "signup" ? "Start Free Trial" : "Log in"}
         </Button>

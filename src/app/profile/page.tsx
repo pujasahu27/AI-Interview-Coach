@@ -25,18 +25,18 @@ export default async function ProfilePage() {
               : "Free plan (exhausted)"
         }
       />
-      <div className="flex-1 px-8 py-9">
+      <div className="flex-1 px-4 py-9 sm:px-8">
         <h1 className="mb-7 font-serif text-[28px] font-normal tracking-tight text-white">
           Profile
         </h1>
 
         <div className="mx-auto max-w-xl space-y-4">
-          <Card className="flex items-center justify-between">
-            <div>
+          <Card className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="min-w-0">
               <p className="text-sm text-sub">Signed in as</p>
-              <p className="font-medium text-foreground">{userData?.email}</p>
+              <p className="truncate font-medium text-foreground">{userData?.email}</p>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-sm text-sub">
                 {credits.unlimited ? "Plan" : "Free turns"}
               </p>

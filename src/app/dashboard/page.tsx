@@ -111,7 +111,7 @@ export default async function DashboardPage() {
         userLabel={userData?.displayName || "You"}
         userPlan={credits.unlimited ? "Unlimited plan" : canInterview ? "Free plan" : "Free plan (exhausted)"}
       />
-      <div className="relative flex-1 overflow-hidden px-8 py-9">
+      <div className="relative flex-1 overflow-hidden px-4 py-9 sm:px-8">
         <div
           className="pointer-events-none absolute -top-32 left-1/2 h-[380px] w-[760px] -translate-x-1/2"
           style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(240,180,41,.07) 0%, transparent 70%)" }}

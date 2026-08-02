@@ -41,7 +41,10 @@ type Props = {
   lastResume: LastResume | null;
 };
 
-const ACCEPT = ".pdf,.docx";
+// iOS Safari's file picker filters unreliably on extensions alone (it can
+// grey out files it can't map to a MIME type), so list both.
+const ACCEPT =
+  ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const WIZARD_STEPS = [
   { n: 1, label: "Resume" },
   { n: 2, label: "Role" },

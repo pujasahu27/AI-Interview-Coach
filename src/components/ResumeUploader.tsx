@@ -32,7 +32,10 @@ export function ResumeUploader({ label, accept, textPlaceholder, onChange, disab
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const acceptedExts = accept.split(",").map((s) => s.trim().toLowerCase());
+  const acceptedExts = accept
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.startsWith("."));
 
   function selectFile(next: File | null) {
     setFile(next);
@@ -131,7 +134,7 @@ export function ResumeUploader({ label, accept, textPlaceholder, onChange, disab
             <span className="text-sm text-body">
               <span className="font-medium text-gold">Click to upload</span> or drag and drop
             </span>
-            <span className="font-mono text-[11px] text-muted">{accept.replaceAll(",", " · ")}</span>
+            <span className="font-mono text-[11px] text-muted">{acceptedExts.join(" · ")}</span>
             <input
               ref={inputRef}
               type="file"

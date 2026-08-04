@@ -50,6 +50,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [googleRedirecting, setGoogleRedirecting] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
 
   useEffect(() => {
     // Picks up the result when the page reloads after a mobile Google
@@ -120,6 +121,7 @@ export function LoginForm() {
   async function handleGoogleSignIn() {
     setError(null);
     setPending(true);
+    setGooglePending(true);
     try {
       const credential = await signInWithGooglePopup();
       await establishServerSession(credential.user);
@@ -153,6 +155,7 @@ export function LoginForm() {
       setError(friendlyError(err));
     } finally {
       setPending(false);
+      setGooglePending(false);
     }
   }
 
@@ -175,7 +178,7 @@ export function LoginForm() {
         disabled={pending || googleRedirecting}
         onClick={handleGoogleSignIn}
       >
-        {!googleRedirecting && (
+        {!googleRedirecting && !googlePending && (
           <svg width="16" height="16" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
@@ -195,7 +198,11 @@ export function LoginForm() {
             />
           </svg>
         )}
-        {googleRedirecting ? "Redirecting to Google…" : "Continue with Google"}
+        {googleRedirecting
+          ? "Redirecting to Google…"
+          : googlePending
+            ? "Signing in…"
+            : "Continue with Google"}
       </Button>
 
       {error && <p className="text-center text-sm text-coral">{error}</p>}

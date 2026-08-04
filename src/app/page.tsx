@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { HeroOrbDemo } from "@/components/HeroOrbDemo";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { MarketingNav } from "@/components/MarketingNav";
@@ -9,7 +8,6 @@ import { Orb } from "@/components/ui/Orb";
 import { Reveal } from "@/components/ui/Reveal";
 import { ScoreBar } from "@/components/ui/ScoreBar";
 import { Tag } from "@/components/ui/Tag";
-import { getCurrentUser } from "@/lib/session";
 
 const HOW_STEPS = [
   {
@@ -47,12 +45,7 @@ const FEATURES = [
   },
 ];
 
-export default async function Home() {
-  const user = await getCurrentUser();
-  if (user) {
-    redirect("/dashboard");
-  }
-
+export default function Home() {
   return (
     <div>
       <MarketingNav />

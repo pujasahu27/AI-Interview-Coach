@@ -34,10 +34,11 @@ export const getCurrentUser = cache(
       return null;
     }
     try {
-      const decoded = await adminAuth.verifySessionCookie(
-        sessionCookie,
-        true,
-      );
+      // Skip the revocation check: it costs an extra network round trip to
+      // Firebase on every single page load. The cookie already expires
+      // after SESSION_COOKIE_MAX_AGE_DAYS, which is an acceptable window
+      // for this app.
+      const decoded = await adminAuth.verifySessionCookie(sessionCookie);
       return { uid: decoded.uid, email: decoded.email ?? null };
     } catch {
       return null;

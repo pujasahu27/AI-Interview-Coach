@@ -3,7 +3,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { Tag } from "@/components/ui/Tag";
 import { adminDb } from "@/lib/firebase-admin";
-import { getCreditStatus, hasCreditsRemaining } from "@/lib/credits";
+import { creditStatusFromUserData, hasCreditsRemaining } from "@/lib/credits";
 import { requireUser } from "@/lib/session";
 
 type SessionDoc = {
@@ -25,13 +25,11 @@ const MIC_ICON = (
 
 export default async function HistoryPage() {
   const user = await requireUser();
-  const userSnap = await adminDb.collection("users").doc(user.uid).get();
-  const credits = await getCreditStatus(user.uid);
-
-  const sessionsSnap = await adminDb
-    .collection("interviewSessions")
-    .where("uid", "==", user.uid)
-    .get();
+  const [userSnap, sessionsSnap] = await Promise.all([
+    adminDb.collection("users").doc(user.uid).get(),
+    adminDb.collection("interviewSessions").where("uid", "==", user.uid).get(),
+  ]);
+  const credits = creditStatusFromUserData(userSnap.data());
 
   const sessions = sessionsSnap.docs
     .map((doc) => ({ id: doc.id, ...doc.data() }) as SessionDoc)

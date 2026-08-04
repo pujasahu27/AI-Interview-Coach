@@ -27,7 +27,7 @@ export function proxy(request: NextRequest) {
   if (isProtected && !hasSessionCookie) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  if (pathname === "/login" && hasSessionCookie) {
+  if ((pathname === "/login" || pathname === "/") && hasSessionCookie) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
   return NextResponse.next();

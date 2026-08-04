@@ -1,15 +1,15 @@
 import { PaywallPlans } from "@/components/PaywallPlans";
 import { Sidebar } from "@/components/ui/Sidebar";
-import { getCreditStatus, hasCreditsRemaining } from "@/lib/credits";
+import { creditStatusFromUserData, hasCreditsRemaining } from "@/lib/credits";
 import { adminDb } from "@/lib/firebase-admin";
 import { isRazorpayConfigured } from "@/lib/razorpay";
 import { requireUser } from "@/lib/session";
 
 export default async function PaywallPage() {
   const user = await requireUser();
-  const credits = await getCreditStatus(user.uid);
   const userSnap = await adminDb.collection("users").doc(user.uid).get();
   const userData = userSnap.data();
+  const credits = creditStatusFromUserData(userData);
   const canInterview = hasCreditsRemaining(credits);
 
   return (

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { ProfileForm } from "@/components/ProfileForm";
-import { getCreditStatus, hasCreditsRemaining } from "@/lib/credits";
+import { creditStatusFromUserData, hasCreditsRemaining } from "@/lib/credits";
 import { adminDb } from "@/lib/firebase-admin";
 import { nearestExperienceBucket } from "@/lib/interviewOptions";
 import { requireUser } from "@/lib/session";
@@ -10,7 +10,7 @@ export default async function ProfilePage() {
   const user = await requireUser();
   const userSnap = await adminDb.collection("users").doc(user.uid).get();
   const userData = userSnap.data();
-  const credits = await getCreditStatus(user.uid);
+  const credits = creditStatusFromUserData(userData);
 
   return (
     <div className="flex min-h-screen flex-col bg-background md:flex-row">

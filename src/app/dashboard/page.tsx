@@ -6,7 +6,7 @@ import { Orb } from "@/components/ui/Orb";
 import { Reveal } from "@/components/ui/Reveal";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { Tag } from "@/components/ui/Tag";
-import { getCreditStatus, hasCreditsRemaining } from "@/lib/credits";
+import { creditStatusFromUserData, hasCreditsRemaining } from "@/lib/credits";
 import { adminDb } from "@/lib/firebase-admin";
 import { requireUser } from "@/lib/session";
 
@@ -58,18 +58,16 @@ const CARD_SHADOW =
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  const userSnapshot = await adminDb.collection("users").doc(user.uid).get();
+  const [userSnapshot, sessionsQuery] = await Promise.all([
+    adminDb.collection("users").doc(user.uid).get(),
+    adminDb.collection("interviewSessions").where("uid", "==", user.uid).get(),
+  ]);
   const userData = userSnapshot.data();
   if (!userSnapshot.exists || userData?.onboardingStatus === "pending") {
     redirect("/onboarding");
   }
 
-  const credits = await getCreditStatus(user.uid);
-
-  const sessionsQuery = await adminDb
-    .collection("interviewSessions")
-    .where("uid", "==", user.uid)
-    .get();
+  const credits = creditStatusFromUserData(userData);
   const sessions = sessionsQuery.docs
     .map((doc) => ({ id: doc.id, ...doc.data() }) as SessionDoc)
     .sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));

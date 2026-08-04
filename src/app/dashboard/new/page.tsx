@@ -9,16 +9,14 @@ import { requireUser } from "@/lib/session";
 export default async function NewInterviewPage() {
   const user = await requireUser();
 
-  const userSnapshot = await adminDb.collection("users").doc(user.uid).get();
+  const [userSnapshot, resumeQuery] = await Promise.all([
+    adminDb.collection("users").doc(user.uid).get(),
+    adminDb.collection("resumes").where("uid", "==", user.uid).get(),
+  ]);
   const userData = userSnapshot.data();
   if (!userSnapshot.exists || userData?.onboardingStatus === "pending") {
     redirect("/onboarding");
   }
-
-  const resumeQuery = await adminDb
-    .collection("resumes")
-    .where("uid", "==", user.uid)
-    .get();
   const lastResumeDoc = resumeQuery.docs.sort(
     (a, b) =>
       (b.data().createdAt?.toMillis() ?? 0) - (a.data().createdAt?.toMillis() ?? 0),

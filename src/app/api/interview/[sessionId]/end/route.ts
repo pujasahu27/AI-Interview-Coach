@@ -50,9 +50,11 @@ export async function POST(_request: Request, context: RouteContext) {
     );
   }
 
-  const resumeSnap = await adminDb.collection("resumes").doc(session.resumeId).get();
+  const [resumeSnap, userSnap] = await Promise.all([
+    adminDb.collection("resumes").doc(session.resumeId).get(),
+    adminDb.collection("users").doc(user.uid).get(),
+  ]);
   const resume = resumeSnap.data()!;
-  const userSnap = await adminDb.collection("users").doc(user.uid).get();
   const targetRole = (userSnap.data()?.targetRole as string) ?? null;
 
   let summary;

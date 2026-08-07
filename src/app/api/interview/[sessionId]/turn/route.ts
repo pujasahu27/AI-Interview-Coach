@@ -34,7 +34,19 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "session is not active" }, { status: 409 });
   }
 
-  const userSnap = await adminDb.collection("users").doc(user.uid).get();
+  const turnCount = session.turnCount as number;
+  const maxTurns = session.maxTurns as number;
+  const currentTurnRef = sessionRef.collection("turns").doc(String(turnCount));
+
+  // These three reads are all independent of each other (each only needs
+  // values already known from sessionSnap), so run them in parallel instead
+  // of paying for four sequential round trips.
+  const [userSnap, allTurnsSnap, resumeSnap] = await Promise.all([
+    adminDb.collection("users").doc(user.uid).get(),
+    sessionRef.collection("turns").get(),
+    adminDb.collection("resumes").doc(session.resumeId).get(),
+  ]);
+
   const userData = userSnap.data();
   const freeTurnsUsed = (userData?.freeTurnsUsed as number) ?? 0;
   const freeTurnsLimit = (userData?.freeTurnsLimit as number) ?? 0;
@@ -42,18 +54,14 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "credits exhausted" }, { status: 402 });
   }
 
-  const turnCount = session.turnCount as number;
-  const maxTurns = session.maxTurns as number;
-  const currentTurnRef = sessionRef.collection("turns").doc(String(turnCount));
-  const currentTurnSnap = await currentTurnRef.get();
-  if (!currentTurnSnap.exists) {
+  const allTurns = allTurnsSnap.docs.map((doc) => ({ id: Number(doc.id), data: doc.data() }));
+  const currentTurn = allTurns.find((t) => t.id === turnCount);
+  if (!currentTurn) {
     return NextResponse.json({ error: "no pending question" }, { status: 409 });
   }
-  const currentQuestion = currentTurnSnap.data()!.question as string;
+  const currentQuestion = currentTurn.data.question as string;
 
-  const allTurnsSnap = await sessionRef.collection("turns").get();
-  const transcript = allTurnsSnap.docs
-    .map((doc) => ({ id: Number(doc.id), data: doc.data() }))
+  const transcript = allTurns
     .filter((t) => t.id < turnCount)
     .sort((a, b) => a.id - b.id)
     .map((t) => ({
@@ -62,7 +70,6 @@ export async function POST(request: Request, context: RouteContext) {
       evaluation: t.data.evaluation,
     }));
 
-  const resumeSnap = await adminDb.collection("resumes").doc(session.resumeId).get();
   const resume = resumeSnap.data()!;
 
   let result;

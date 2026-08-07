@@ -44,20 +44,26 @@ export async function POST(request: Request) {
     overrides.targetCompany = targetCompany.trim();
   }
   if (Object.keys(overrides).length > 0) {
-    await resumeRef.update(overrides);
     resume = { ...resume, ...overrides };
   }
 
   let question: string;
   try {
-    question = await generateOpeningQuestion({
-      resumeText: resume.rawText,
-      jobDescriptionText: resume.jobDescriptionText,
-      yearsOfExperience: resume.yearsOfExperience,
-      interviewFocus: resume.interviewFocus as InterviewFocus,
-      difficulty: (resume.difficulty as Difficulty) ?? "intermediate",
-      targetCompany: (resume.targetCompany as string) || null,
-    });
+    // The resume-override write doesn't need to finish before the LLM call
+    // starts — they're independent, so run them together instead of paying
+    // for the write's latency on top of the (much longer) generation call.
+    const [openingQuestion] = await Promise.all([
+      generateOpeningQuestion({
+        resumeText: resume.rawText,
+        jobDescriptionText: resume.jobDescriptionText,
+        yearsOfExperience: resume.yearsOfExperience,
+        interviewFocus: resume.interviewFocus as InterviewFocus,
+        difficulty: (resume.difficulty as Difficulty) ?? "intermediate",
+        targetCompany: (resume.targetCompany as string) || null,
+      }),
+      Object.keys(overrides).length > 0 ? resumeRef.update(overrides) : null,
+    ]);
+    question = openingQuestion;
   } catch (error) {
     console.error("generateOpeningQuestion failed:", error);
     const { status, message } = describeGeminiError(error);
@@ -65,22 +71,24 @@ export async function POST(request: Request) {
   }
 
   const sessionRef = adminDb.collection("interviewSessions").doc();
-  await sessionRef.set({
-    uid: user.uid,
-    resumeId,
-    status: "active",
-    turnCount: 0,
-    maxTurns: MAX_TURNS,
-    recommendationsSummary: null,
-    overallScore: null,
-    createdAt: FieldValue.serverTimestamp(),
-  });
-  await sessionRef.collection("turns").doc("0").set({
-    question,
-    answerTranscript: null,
-    evaluation: null,
-    createdAt: FieldValue.serverTimestamp(),
-  });
+  await Promise.all([
+    sessionRef.set({
+      uid: user.uid,
+      resumeId,
+      status: "active",
+      turnCount: 0,
+      maxTurns: MAX_TURNS,
+      recommendationsSummary: null,
+      overallScore: null,
+      createdAt: FieldValue.serverTimestamp(),
+    }),
+    sessionRef.collection("turns").doc("0").set({
+      question,
+      answerTranscript: null,
+      evaluation: null,
+      createdAt: FieldValue.serverTimestamp(),
+    }),
+  ]);
 
   return NextResponse.json(
     { sessionId: sessionRef.id, question, maxTurns: MAX_TURNS },

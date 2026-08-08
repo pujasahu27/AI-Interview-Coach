@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { QuestionPlayer } from "@/components/QuestionPlayer";
 import { Button } from "@/components/ui/Button";
 import { Orb } from "@/components/ui/Orb";
@@ -22,14 +22,6 @@ const THINKING_LINES = [
   "Following up on that…",
   "Noting that down…",
 ];
-
-const TURN_SECONDS = 60;
-
-function formatSeconds(total: number): string {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
 
 function InterviewHeader({
   turnNumber,
@@ -54,60 +46,6 @@ function InterviewHeader({
   );
 }
 
-function QuestionTimer({
-  turnNumber,
-  maxTurns,
-  paused,
-  onExpire,
-}: {
-  turnNumber: number;
-  maxTurns: number;
-  paused: boolean;
-  onExpire: () => void;
-}) {
-  const [secondsLeft, setSecondsLeft] = useState(TURN_SECONDS);
-
-  useEffect(() => {
-    if (paused) return;
-    const interval = setInterval(() => {
-      setSecondsLeft((s) => Math.max(0, s - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [paused]);
-
-  useEffect(() => {
-    if (!paused && secondsLeft === 0) onExpire();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secondsLeft, paused]);
-
-  const urgent = secondsLeft <= 10;
-
-  return (
-    <>
-      <div className="relative z-10 mx-auto mt-2.5 flex w-full max-w-xl items-center justify-center gap-2.5 px-6">
-        <p className="font-mono text-[11px] uppercase tracking-[.1em] text-sub">
-          Question {Math.min(turnNumber, maxTurns)} of {maxTurns}
-        </p>
-        <span
-          className={`font-mono text-[11px] tabular-nums ${urgent ? "text-coral" : "text-muted"}`}
-        >
-          &middot; {paused ? "listening…" : formatSeconds(secondsLeft)}
-        </span>
-      </div>
-      <div className="relative z-10 mx-auto mt-2 w-full max-w-xl px-6">
-        <div className="h-[3px] w-full overflow-hidden rounded-full bg-line2">
-          <div
-            className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
-              urgent ? "bg-coral" : "bg-gold"
-            }`}
-            style={{ width: paused ? "100%" : `${(secondsLeft / TURN_SECONDS) * 100}%` }}
-          />
-        </div>
-      </div>
-    </>
-  );
-}
-
 function QuestionStage({
   question,
   turnNumber,
@@ -116,7 +54,7 @@ function QuestionStage({
   onAnswerChange,
   error,
   onSubmit,
-  onExpire,
+  onSkip,
   onEnd,
 }: {
   question: string;
@@ -126,25 +64,20 @@ function QuestionStage({
   onAnswerChange: (value: string) => void;
   error: string | null;
   onSubmit: () => void;
-  onExpire: () => void;
+  onSkip: () => void;
   onEnd: () => void;
 }) {
-  const [narrating, setNarrating] = useState(true);
-
   return (
     <>
       <div className="sticky top-0 z-30 bg-background/90 pb-2 backdrop-blur-sm">
         <InterviewHeader turnNumber={turnNumber} maxTurns={maxTurns} onEnd={onEnd} />
-        <QuestionTimer
-          turnNumber={turnNumber}
-          maxTurns={maxTurns}
-          paused={narrating}
-          onExpire={onExpire}
-        />
+        <p className="relative z-10 mx-auto mt-2.5 w-full max-w-xl px-6 text-center font-mono text-[11px] uppercase tracking-[.1em] text-sub">
+          Question {Math.min(turnNumber, maxTurns)} of {maxTurns}
+        </p>
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-12 px-6 py-14">
         <div className="animate-fade-in flex flex-col gap-10">
-          <QuestionPlayer text={question} onSpeechEnd={() => setNarrating(false)} />
+          <QuestionPlayer text={question} />
 
           <div className="flex flex-col gap-3">
             <p className="text-center font-mono text-[10.5px] uppercase tracking-[.16em] text-muted">
@@ -154,9 +87,14 @@ function QuestionStage({
           </div>
 
           {error && <p className="text-center text-sm text-coral">{error}</p>}
-          <Button variant="gold" size="lg" fullWidth onClick={onSubmit}>
-            Submit Answer
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={onSkip}>
+              Skip question
+            </Button>
+            <Button variant="gold" size="lg" fullWidth onClick={onSubmit}>
+              Submit Answer
+            </Button>
+          </div>
         </div>
       </div>
     </>
@@ -179,13 +117,13 @@ export function InterviewScreen({
   );
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmitAnswer(auto = false) {
+  async function handleSubmitAnswer(skip = false) {
     const trimmed = answer.trim();
-    if (!auto && !trimmed) {
+    if (!skip && !trimmed) {
       setError("Record or type an answer before submitting.");
       return;
     }
-    const textToSubmit = trimmed || "(No answer provided — time ran out.)";
+    const textToSubmit = trimmed || "(No answer provided — skipped.)";
     setError(null);
     setPhase("thinking");
     const thinkingSince = Date.now();
@@ -245,7 +183,7 @@ export function InterviewScreen({
           onAnswerChange={setAnswer}
           error={error}
           onSubmit={() => void handleSubmitAnswer(false)}
-          onExpire={() => void handleSubmitAnswer(true)}
+          onSkip={() => void handleSubmitAnswer(true)}
           onEnd={() => router.push(`/interview/${sessionId}/summary`)}
         />
       ) : (

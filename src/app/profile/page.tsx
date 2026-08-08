@@ -25,7 +25,7 @@ export default async function ProfilePage() {
               : "Free plan (exhausted)"
         }
       />
-      <div className="flex-1 px-4 py-9 sm:px-8">
+      <div className="animate-fade-in flex-1 px-4 py-9 sm:px-8">
         <h1 className="mb-7 font-serif text-[28px] font-normal tracking-tight text-white">
           Profile
         </h1>

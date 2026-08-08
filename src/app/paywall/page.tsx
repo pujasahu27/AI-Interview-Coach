@@ -21,7 +21,7 @@ export default async function PaywallPage() {
           credits.unlimited ? "Unlimited plan" : canInterview ? "Free plan" : "Free plan (exhausted)"
         }
       />
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-6 px-6 py-16 text-center">
+      <div className="animate-fade-in mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-6 px-6 py-16 text-center">
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-2xl font-bold text-on-accent">
           !
         </span>
